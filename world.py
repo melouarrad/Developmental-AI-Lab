@@ -14,6 +14,8 @@ class Agent:
         self._valence_table = _valence_table
         self._action = None
         self._anticipated_outcome = None
+        self._memory_outcome = {0 : 0, 1 : 0}   #outcomes are initialzed at 0 per default
+        self._cycle_counter = 0
 
     def action(self, _outcome):
         """ tracing the previous cycle """
@@ -23,12 +25,33 @@ class Agent:
                   ", Outcome: " + str(_outcome) +
                   ", Satisfaction: (anticipation: " + str(self._anticipated_outcome == _outcome) +
                   ", valence: " + str(self._valence_table[self._action][_outcome]) + ")")
+            self._memory_outcome[self._action] = _outcome
 
         """ Computing the next action to enact """
-        # TODO: Implement the agent's decision mechanism
-        self._action = 0
-        # TODO: Implement the agent's anticipation mechanism
-        self._anticipated_outcome = 0
+        # first row
+        if self._action is None:
+            self._action = 0
+            #self._cycle_counter = 1
+        else:
+            last_valence = self._valence_table[self._action][_outcome]
+
+            # if agent get bored (he got the same action 3 times in a row) he changes his action 
+            if self._cycle_counter >= 3:
+                self._action = 1 - self._action
+                self._cycle_counter = 1
+
+            # if its valence is negative the agent changes his action
+            elif last_valence < 0:
+                self._action = 1 - self._action
+                self._cycle_counter += 1
+
+            # if not he repeat the same action
+            else:
+                self._cycle_counter += 1
+
+        # same action make same outcome
+        self._anticipated_outcome = self._memory_outcome[self._action]
+
         return self._action
 
 
@@ -66,13 +89,13 @@ class Environment3:
 
 
 # TODO Define the valance of interactions (action, outcome)
-valences = [[-1, 1], [-1, 1]]
-# valences = [[1, -1], [1, -1]]
+# valences = [[-1, 1], [-1, 1]]
+valences = [[1, -1], [1, -1]]
 # TODO Choose an agent
 a = Agent(valences)
 # TODO Choose an environment
-e = Environment1()
-# e = Environment2()
+# e = Environment1()
+e = Environment2()
 # e = Environment3()
 # e = TurtlePyEnacter()
 # e = TurtleSimEnacter()
